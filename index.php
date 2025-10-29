@@ -1,7 +1,6 @@
 <?php
     //var_dump($_GET); (fonction qui permet d'afficher le contenu d'une variable, y compris les tableaux)
     require_once 'header.php';   
-    require_once 'db/mariadb.php';
 ?>
 <?php
 if($dbh!=NULL){
@@ -11,7 +10,7 @@ if($dbh!=NULL){
         $page = $_GET['page'];
     }
     else{
-        //Si la clef page n'existe pas dans le tableau , nous irons à la page home 
+        //Si la clef page n'existe pas dansddd le tableau , nous irons à la page home 
         $page = 'home';
     }
     //Si le fichier php de la page existe  
