@@ -1,6 +1,6 @@
 <title>Chambres - Hôtel</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-<style>
+<style>/* CSS avec ChatGPT */
   body { margin:0; font-family: Arial, sans-serif; color:#333; }
   header { background: url('https://www.parchotel-alsace.com/fr/img/slideshow_xlarge/1070_main.jpeg') center/cover no-repeat; height:60vh; display:flex; align-items:center; justify-content:center; text-align:center; color:white; position:relative; }
   header::after { content: ""; position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); }

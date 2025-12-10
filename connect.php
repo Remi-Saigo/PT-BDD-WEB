@@ -1,6 +1,5 @@
 <?php
 if (isset($_POST["Valider"])) {
-  //var_dump($_POST);
   $email = $_POST["AdresseMail"];
   $password = htmlentities($_POST["Password"]);
 

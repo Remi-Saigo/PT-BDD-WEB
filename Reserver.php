@@ -2,18 +2,14 @@
 $message = '';
 $error = '';
 
-// Traitement de la réservation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reserver'])) {
     $numerochambre = $_POST['numero_chambre'];
     
     try {
-        // Vérifier si la chambre est toujours disponible
         $stmt = $dbh->prepare("SELECT Disponibilité FROM Chambre WHERE `NumeroChambre` = ?");
         $stmt->execute([$numerochambre]);
         $chambre = $stmt->fetch();
-        
         if ($chambre && $chambre['Disponibilité'] == 1) {
-            // Mettre à jour la disponibilité
             $updateStmt = $dbh->prepare("UPDATE Chambre SET Disponibilité = 0 WHERE `NumeroChambre` = ?");
             $updateStmt->execute([$numerochambre]);
             
@@ -25,8 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reserver'])) {
         $error = "Erreur lors de la réservation : " . $e->getMessage();
     }
 }
-
-// Récupérer les chambres disponibles
 try {
     $stmt = $dbh->query("SELECT `NumeroChambre`, `Etage Chambre`, `Type Chambre`, Prix 
                          FROM Chambre 
@@ -38,14 +32,11 @@ try {
     $chambresDisponibles = [];
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réservation de Chambres</title>
-    <style>
+    <style>/* CSS avec ChatGPT */
         * {
             margin: 0;
             padding: 0;
@@ -250,4 +241,4 @@ try {
         </div>
     </div>
 </body>
-</html>
+*

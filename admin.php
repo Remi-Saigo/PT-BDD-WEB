@@ -2,7 +2,6 @@
 $message = '';
 $error = '';
 
-// Traitement de l'ajout de chambre
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
     $etage = $_POST['etage'];
     $numero = $_POST['numero'];
@@ -11,7 +10,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
     $disponibilite = isset($_POST['disponibilite']) ? 1 : 0;
     
     try {
-        // Insertion de la nouvelle chambre (sans spécifier le numéro car AUTO_INCREMENT)
         $stmt = $dbh->prepare("INSERT INTO Chambre (`Etage Chambre`, `Type Chambre`, Prix, Disponibilité, NumeroChambre) 
                                VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$etage, $type, $prix, $disponibilite, $numero]);
@@ -19,14 +17,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
         $numeroChambre = $dbh->lastInsertId();
         $message = "Chambre n°$numeroChambre ajoutée avec succès !";
         
-        // Réinitialiser le formulaire
         $_POST = array();
     } catch(PDOException $e) {
         $error = "Erreur lors de l'ajout : " . $e->getMessage();
     }
 }
 
-// Récupérer toutes les chambres pour affichage
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer'])) {
+    $id = $_POST['delete_id'];
+
+    try {
+        $stmt = $dbh->prepare("DELETE FROM Chambre WHERE NumeroChambre = ?");
+        $stmt->execute([$id]);
+
+        $message = "Chambre n°$id supprimée avec succès !";
+    } catch(PDOException $e) {
+        $error = "Erreur lors de la suppression : " . $e->getMessage();
+    }
+}
+
 try {
     $stmt = $dbh->query("SELECT `NumeroChambre`, `Etage Chambre`, `Type Chambre`, Prix, Disponibilité 
                          FROM Chambre 
@@ -40,12 +49,18 @@ try {
 
 <head>
     <title>Ajouter une Chambre</title>
-    <style>
+    <style> /* CSS avec ChatGPT */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        .btn-delete {
+            background:#dc3545; color:white; border:none; padding:8px 14px;
+            border-radius:8px; cursor:pointer; font-size:0.9em; font-weight:600;
+            transition:0.2s;
+        }
+        .btn-delete:hover { opacity:0.85; transform:translateY(-2px); }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -251,102 +266,106 @@ try {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-card">
-            <div class="header">
-                <h1>➕ Ajouter une Chambre</h1>
-                <p>Complétez le formulaire pour ajouter une nouvelle chambre à l'hôtel</p>
-            </div>
-            
-            <div class="form-content">
-                <?php if ($message): ?>
-                    <div class="message success">✓ <?php echo htmlspecialchars($message); ?></div>
-                <?php endif; ?>
-                
-                <?php if ($error): ?>
-                    <div class="message error">✗ <?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
-                
-                <form method="POST">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="etage">Étage</label>
-                            <input type="number" id="etage" name="etage" min="0" max="50" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="numero">Numero de Chambre</label>
-                            <input type="number" id="numero" name="numero" min="0" max="1000" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="type">Type de Chambre *</label>
-                            <select id="type" name="type" required>
-                                <option value="">Sélectionnez un type</option>
-                                <option value="Simple">Simple</option>
-                                <option value="Double">Double</option>
-                                <option value="Suite">Suite</option>
-                                <option value="Familiale">Familiale</option>
-                                <option value="Deluxe">Deluxe</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="prix">Prix (€) *</label>
-                            <input type="number" id="prix" name="prix" min="0" step="0.01" placeholder="Ex: 89.99" required>
-                        </div>
-                    </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="disponibilite" name="disponibilite" checked>
-                        <label for="disponibilite">Chambre disponible à la réservation</label>
-                    </div>
-                    
-                    <button type="submit" name="ajouter" class="btn-submit">Ajouter la chambre</button>
-                </form>
-            </div>
+<div class="container">
+
+    <div class="form-card">
+        <div class="header">
+            <h1>➕ Ajouter une Chambre</h1>
+            <p>Complétez le formulaire pour ajouter une nouvelle chambre</p>
         </div>
-        
-        <div class="chambres-list">
-            <div class="list-header">
-                <h2>📋 Liste des Chambres (<?php echo count($chambres); ?>)</h2>
-            </div>
-            
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>N° Chambre</th>
-                            <th>Étage</th>
-                            <th>Type</th>
-                            <th>Prix</th>
-                            <th>Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (count($chambres) > 0): ?>
-                            <?php foreach ($chambres as $chambre): ?>
-                                <tr>
-                                    <td><strong>#<?php echo htmlspecialchars($chambre['NumeroChambre']); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($chambre['Etage Chambre']); ?></td>
-                                    <td><?php echo htmlspecialchars($chambre['Type Chambre']); ?></td>
-                                    <td class="prix-cell"><?php echo number_format($chambre['Prix'], 2, ',', ' '); ?> €</td>
-                                    <td>
-                                        <span class="badge <?php echo $chambre['Disponibilité'] == 1 ? 'disponible' : 'occupee'; ?>">
-                                            <?php echo $chambre['Disponibilité'] == 1 ? 'Disponible' : 'Occupée'; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">
-                                    Aucune chambre enregistrée pour le moment.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+
+        <div class="form-content">
+            <?php if ($message): ?><div class="message success">✓ <?= htmlspecialchars($message) ?></div><?php endif; ?>
+            <?php if ($error): ?><div class="message error">✗ <?= htmlspecialchars($error) ?></div><?php endif; ?>
+
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="etage">Étage</label>
+                        <input type="number" id="etage" name="etage" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numero">Numéro</label>
+                        <input type="number" id="numero" name="numero" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" name="type" required>
+                            <option value="">Sélectionnez un type</option>
+                            <option>Simple</option>
+                            <option>Double</option>
+                            <option>Suite</option>
+                            <option>Familiale</option>
+                            <option>Deluxe</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prix">Prix (€)</label>
+                        <input type="number" id="prix" name="prix" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="disponibilite" name="disponibilite" checked>
+                    <label for="disponibilite">Chambre disponible</label>
+                </div>
+
+                <button type="submit" name="ajouter" class="btn-submit">Ajouter la chambre</button>
+            </form>
         </div>
     </div>
+
+    <div class="chambres-list">
+        <div class="list-header">
+            <h2>📋 Liste des Chambres (<?= count($chambres) ?>)</h2>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Étage</th>
+                        <th>Type</th>
+                        <th>Prix</th>
+                        <th>Statut</th>
+                        <th>Actions</th> 
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php foreach ($chambres as $chambre): ?>
+                    <tr>
+                        <td><strong>#<?= htmlspecialchars($chambre['NumeroChambre']) ?></strong></td>
+                        <td><?= htmlspecialchars($chambre['Etage Chambre']) ?></td>
+                        <td><?= htmlspecialchars($chambre['Type Chambre']) ?></td>
+                        <td class="prix-cell"><?= number_format($chambre['Prix'], 2, ',', ' ') ?> €</td>
+                        <td>
+                            <span class="badge <?= $chambre['Disponibilité'] ? 'disponible' : 'occupee' ?>">
+                                <?= $chambre['Disponibilité'] ? 'Disponible' : 'Occupée' ?>
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" onsubmit="return confirm('Supprimer cette chambre ?');">
+                                <input type="hidden" name="delete_id" value="<?= $chambre['NumeroChambre'] ?>">
+                                <button type="submit" name="supprimer" class="btn-delete">Supprimer</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    <?php endforeach; ?>
+
+                    <?php if (count($chambres) === 0): ?>
+                        <tr><td colspan="6" style="text-align:center; padding:40px;">Aucune chambre.</td></tr>
+                    <?php endif; ?>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
 </body>

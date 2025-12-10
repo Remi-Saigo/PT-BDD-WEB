@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Super PHP</title>
@@ -27,13 +25,7 @@
           <a class="nav-link" href="index.php?page=connect">Connexion</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="index.php?page=contact">Contact</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="index.php?page=Reserver">Reserver</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="index.php?page=ListeContacts">Liste Des Contact</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="index.php?page=ListeUser">Liste Des Utilisateurs</a>
