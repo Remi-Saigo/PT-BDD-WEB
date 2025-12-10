@@ -12,7 +12,7 @@ if($dbh!=NULL){
         $page = $_GET['page'];
     }
     else{
-        //Si la clef page n'existe pas dans le tableau , nous irons à la page home 
+        //Si la clef page n'existe pas dansddd le tableau , nous irons à la page home 
         $page = 'home';
     }
     //Si le fichier php de la page existe  
