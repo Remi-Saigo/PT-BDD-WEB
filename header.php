@@ -30,17 +30,19 @@
           <a class="nav-link" href="index.php?page=contact">Contact</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="index.php?page=Reserver">Reserver</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="index.php?page=ListeContacts">Liste Des Contact</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="index.php?page=ListeUser">Liste Des Utilisateurs</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="index.php?page=admin">Admin</a>
+        </li>
 
       </ul>
-      <form class="d-flex">
-        <input class="form-control me-sm-2" type="search" placeholder="Search">
-        <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-      </form>
     </div>
   </div>
 </nav>

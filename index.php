@@ -1,6 +1,5 @@
 <?php
-    //var_dump($_GET); (fonction qui permet d'afficher le contenu d'une variable, y compris les tableaux)
-    // Test
+    SESSION_START();
     require_once 'header.php';   
     require_once 'db/mariadb.php';
 ?>
