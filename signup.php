@@ -1,88 +1,106 @@
 <?php
-if (isset($_POST["Valider"])) {
-    //var_dump($_POST);
-    $email = $_POST["Mail"];
-    $password = htmlentities($_POST["Password"]);
-    $name = htmlentities($_POST["Nom"]);
-    $surname = htmlentities($_POST["Prenom"]);
 
-    if (empty($email) || empty($password) || empty($name) || empty($surname)) {
-        echo "Veuillez remplir tous les champs :<br>";
-        if (empty($email)) {
-            echo 'Veuillez saisir un Email<br>';
-        }
-        if (empty($password)) {
-            echo 'Veuillez saisir un Mot De passe<br>';
-        }
-        if (empty($name)) {
-            echo 'Veuillez saisir un Nom<br>';
-        }
-        if (empty($surname)) {
-            echo 'Veuillez saisir un Prénom<br>';
-        }
+$erreurs = [];
+$nom = $prenom = $email = $password = "";
+$success = false;
 
-    } else {
-        echo "$email<br>";
-        echo "$password<br>";
-        echo "$name<br>";
-        echo "$surname<br>";
-    }
+if (isset($_POST['transmettre'])) {
+    $nom = trim($_POST['nom'] ?? '');
+    $prenom = trim($_POST['prenom'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
 
-    //on protège l'inscription en vérifiant qu'il n'y a aucun champ vide
-if (!empty($email) && !empty($password) && !empty($name) && !empty($surname)) {
-  //On prépare une requête d'insertion avec une collone de la table qui associe avec une donnée
-    $sql = $dbh->prepare("INSERT INTO User(`name`, `surname`, `email`, `password`) VALUES (:name, :surname, :email, :password)");
-    //Associe une variable de la requpete avec une variable php en précisant son type
-    $sql->bindParam(':name', $name, PDO::PARAM_STR);
-    $sql->bindParam(':surname', $surname, PDO::PARAM_STR);
-    $sql->bindParam(':email', $email, PDO::PARAM_STR);
-    $sql->bindParam(':password', $password, PDO::PARAM_STR);
-        //execute la commande préparée et met le résultat dans $r
-        $r = $sql->execute();
-        // si $r = vrai , alors l'inscription est réussie 
-        if ($r) {
-            echo "Inscription réussie";
+    if (empty($nom)) $erreurs['nom'] = true;
+    if (empty($prenom)) $erreurs['prenom'] = true;
+    if (empty($email)) $erreurs['email'] = true;
+    if (empty($password)) $erreurs['password'] = true;
+
+    if (empty($erreurs)) {
+        $stmt = $dbh->prepare("SELECT email FROM Client WHERE email = :email");
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->execute();
+        if ($stmt->fetch()) {
+            $erreurs['email'] = true;
+            $erreurs['exists'] = "Ce mail est déjà utilisé.";
         } else {
-            echo "Inscription échouée";
-        } 
-    }   
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            $role = "user";
+
+            $sql = $dbh->prepare("
+                INSERT INTO Client (nom, prenom, email, password, role) 
+                VALUES (:nom, :prenom, :email, :password, :role)
+            ");
+            $sql->bindParam(':nom', $nom, PDO::PARAM_STR);
+            $sql->bindParam(':prenom', $prenom, PDO::PARAM_STR);
+            $sql->bindParam(':email', $email, PDO::PARAM_STR);
+            $sql->bindParam(':password', $passwordHash, PDO::PARAM_STR);
+            $sql->bindParam(':role', $role, PDO::PARAM_STR);
+
+            if ($sql->execute()) {
+                $_SESSION['prenom'] = $prenom;
+                $_SESSION['login'] = $email;
+                $_SESSION['role'] = $role;
+
+                $success = true;
+            } else {
+                $erreurs['db'] = "Erreur lors de l'inscription, veuillez réessayer.";
+            }
+        }
+    }
 }
 ?>
 
-<h1 class = "text-danger text-center">Inscription</h1>
-  <div class="col-12 col-md-6">
-    <form action="index.php?page=signup" method="post">
-      <div>
-        <label for="exampleInputEmail1" class="form-label mt-4">Email address</label>
-        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" name="Mail">
-      </div>
-      <div>
-        <label for="exampleInputPassword1" class="form-label mt-4">Password</label>
-        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password"name="Password" autocomplete="off">
-      </div>
-      <div>
-        <label for="exampleInputName" class="form-label mt-4">Nom</label>
-        <input type="text" class="form-control" id="exampleInputName" placeholder="Nom" name="Nom"autocomplete="off">
-      </div>
-      <div>
-        <label for="exampleInputSurname" class="form-label mt-4">Prénom</label>
-        <input type="text" class="form-control" id="exampleInputSurname" placeholder="Surname" name="Prenom"autocomplete="off">
-      </div>
+<?php if (!empty($erreurs)): ?>
+<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <strong>Erreur !</strong><br>
+    <?php foreach ($erreurs as $key => $msg): ?>
+        <?= is_string($msg) ? $msg : "Veuillez remplir le champ manquant : $key" ?><br>
+    <?php endforeach; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+
+<?php if ($success): ?>
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Bien joué !</strong> Inscription réussie et vous êtes connecté !
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <meta http-equiv="refresh" content="1; url=index.php?page=home">
+</div>
+<?php endif; ?>
+
+<form action="index.php?page=signup" method="post">
+  <fieldset>
+    <legend class="mt-4">Inscription</legend>
+
+    <div>
+      <label class="form-label mt-4">Votre Nom</label>
+      <input name="nom" type="text" 
+             class="form-control <?= isset($erreurs['nom']) ? 'is-invalid' : '' ?>" 
+             value="<?= htmlspecialchars($nom) ?>">
     </div>
-    <div class="col-12 col-md-6">
-      <legend class="mt-4">Genre</legend>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="Genre" id="optionsRadios1" value="Homme" checked="">
-          <label class="form-check-label" for="optionsRadios1">Homme</label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="Genre" id="optionsRadios2" value="Femme">
-          <label class="form-check-label" for="optionsRadios2">Femme</label>
-        </div>
-        <div class="form-check disabled">
-          <input class="form-check-input" type="radio" name="Genre" id="optionsRadios3" value="Autre"  >
-          <label class="form-check-label" for="optionsRadios3">Autre</label>
-        </div>
+
+    <div>
+      <label class="form-label mt-4">Votre Prénom</label>
+      <input name="prenom" type="text" 
+             class="form-control <?= isset($erreurs['prenom']) ? 'is-invalid' : '' ?>" 
+             value="<?= htmlspecialchars($prenom) ?>">
     </div>
-  <button type="submit" class="btn btn-primary m-4" name="Valider">Soumettre</button>
+
+    <div>
+      <label class="form-label mt-4">Email address</label>
+      <input name="email" type="email" 
+             class="form-control <?= isset($erreurs['email']) ? 'is-invalid' : '' ?>" 
+             value="<?= htmlspecialchars($email) ?>"
+             placeholder="Enter email">
+    </div>
+
+    <div>
+      <label class="form-label mt-4">Password</label>
+      <input name="password" type="password"
+             class="form-control <?= isset($erreurs['password']) ? 'is-invalid' : '' ?>" 
+             placeholder="Password" autocomplete="off">
+    </div>
+
+    <button name="transmettre" type="submit" class="btn btn-primary mt-3">Soumettre</button>
+  </fieldset>
 </form>

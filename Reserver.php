@@ -1,17 +1,4 @@
 <?php
-// Configuration de la base de données
-$host = 'localhost';
-$dbname = 'PHPBDHOTEL';
-$username = 'login4439';
-$password = 'HNLCQSaIAXkvUJo';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Erreur de connexion : " . $e->getMessage());
-}
-
 $message = '';
 $error = '';
 
@@ -21,13 +8,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reserver'])) {
     
     try {
         // Vérifier si la chambre est toujours disponible
-        $stmt = $pdo->prepare("SELECT Disponibilité FROM Chambre WHERE `Numéro Chambre` = ?");
+        $stmt = $dbh->prepare("SELECT Disponibilité FROM Chambre WHERE `NumeroChambre` = ?");
         $stmt->execute([$numerochambre]);
         $chambre = $stmt->fetch();
         
         if ($chambre && $chambre['Disponibilité'] == 1) {
             // Mettre à jour la disponibilité
-            $updateStmt = $pdo->prepare("UPDATE Chambre SET Disponibilité = 0 WHERE `Numéro Chambre` = ?");
+            $updateStmt = $dbh->prepare("UPDATE Chambre SET Disponibilité = 0 WHERE `NumeroChambre` = ?");
             $updateStmt->execute([$numerochambre]);
             
             $message = "Chambre n°$numerochambre réservée avec succès !";
@@ -41,10 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reserver'])) {
 
 // Récupérer les chambres disponibles
 try {
-    $stmt = $pdo->query("SELECT `Numéro Chambre`, `Etage Chambre`, `Type Chambre`, Prix 
+    $stmt = $dbh->query("SELECT `NumeroChambre`, `Etage Chambre`, `Type Chambre`, Prix 
                          FROM Chambre 
                          WHERE Disponibilité = 1 
-                         ORDER BY `Numéro Chambre`");
+                         ORDER BY `NumeroChambre`");
     $chambresDisponibles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
     $error = "Erreur lors de la récupération des chambres : " . $e->getMessage();
@@ -231,7 +218,7 @@ try {
                 <div class="chambres-grid">
                     <?php foreach ($chambresDisponibles as $chambre): ?>
                         <div class="chambre-card">
-                            <div class="chambre-numero">Chambre #<?php echo htmlspecialchars($chambre['Numéro Chambre']); ?></div>
+                            <div class="chambre-numero">Chambre #<?php echo htmlspecialchars($chambre['NumeroChambre']); ?></div>
                             
                             <div class="chambre-info">
                                 <div class="info-row">
@@ -247,7 +234,7 @@ try {
                             <div class="prix"><?php echo number_format($chambre['Prix'], 2, ',', ' '); ?> €</div>
                             
                             <form method="POST">
-                                <input type="hidden" name="numero_chambre" value="<?php echo htmlspecialchars($chambre['Numéro Chambre']); ?>">
+                                <input type="hidden" name="numero_chambre" value="<?php echo htmlspecialchars($chambre['NumeroChambre']); ?>">
                                 <button type="submit" name="reserver" class="btn-reserver">Réserver maintenant</button>
                             </form>
                         </div>

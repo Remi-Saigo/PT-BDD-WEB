@@ -1,34 +1,22 @@
 <?php
-// Configuration de la base de données
-$host = 'localhost';
-$dbname = 'PHPBDHOTEL';
-$username = 'login4439';
-$password = 'HNLCQSaIAXkvUJo';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Erreur de connexion : " . $e->getMessage());
-}
-
 $message = '';
 $error = '';
 
 // Traitement de l'ajout de chambre
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
     $etage = $_POST['etage'];
+    $numero = $_POST['numero'];
     $type = $_POST['type'];
     $prix = $_POST['prix'];
     $disponibilite = isset($_POST['disponibilite']) ? 1 : 0;
     
     try {
         // Insertion de la nouvelle chambre (sans spécifier le numéro car AUTO_INCREMENT)
-        $stmt = $pdo->prepare("INSERT INTO Chambre (`Etage Chambre`, `Type Chambre`, Prix, Disponibilité) 
-                               VALUES (?, ?, ?, ?)");
-        $stmt->execute([$etage, $type, $prix, $disponibilite]);
+        $stmt = $dbh->prepare("INSERT INTO Chambre (`Etage Chambre`, `Type Chambre`, Prix, Disponibilité, NumeroChambre) 
+                               VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$etage, $type, $prix, $disponibilite, $numero]);
         
-        $numeroChambre = $pdo->lastInsertId();
+        $numeroChambre = $dbh->lastInsertId();
         $message = "Chambre n°$numeroChambre ajoutée avec succès !";
         
         // Réinitialiser le formulaire
@@ -40,16 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
 
 // Récupérer toutes les chambres pour affichage
 try {
-    $stmt = $pdo->query("SELECT `Numéro Chambre`, `Etage Chambre`, `Type Chambre`, Prix, Disponibilité 
+    $stmt = $dbh->query("SELECT `NumeroChambre`, `Etage Chambre`, `Type Chambre`, Prix, Disponibilité 
                          FROM Chambre 
-                         ORDER BY `Numéro Chambre` DESC");
+                         ORDER BY `NumeroChambre` DESC");
     $chambres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
     $error = "Erreur lors de la récupération : " . $e->getMessage();
     $chambres = [];
 }
 ?>
-
 
 <head>
     <title>Ajouter une Chambre</title>
@@ -283,8 +270,12 @@ try {
                 <form method="POST">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="etage">Étage *</label>
+                            <label for="etage">Étage</label>
                             <input type="number" id="etage" name="etage" min="0" max="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numero">Numero de Chambre</label>
+                            <input type="number" id="numero" name="numero" min="0" max="1000" required>
                         </div>
                         
                         <div class="form-group">
@@ -335,7 +326,7 @@ try {
                         <?php if (count($chambres) > 0): ?>
                             <?php foreach ($chambres as $chambre): ?>
                                 <tr>
-                                    <td><strong>#<?php echo htmlspecialchars($chambre['Numéro Chambre']); ?></strong></td>
+                                    <td><strong>#<?php echo htmlspecialchars($chambre['NumeroChambre']); ?></strong></td>
                                     <td><?php echo htmlspecialchars($chambre['Etage Chambre']); ?></td>
                                     <td><?php echo htmlspecialchars($chambre['Type Chambre']); ?></td>
                                     <td class="prix-cell"><?php echo number_format($chambre['Prix'], 2, ',', ' '); ?> €</td>
