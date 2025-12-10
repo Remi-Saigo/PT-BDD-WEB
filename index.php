@@ -25,7 +25,7 @@ if($dbh!=NULL){
         require_once 'error404.php';
     }
 } else {
-    require_once 'maintenance.php';
+    //require_once 'maintenance.php';
 }
 ?>
 <?php
